@@ -1,0 +1,26 @@
+{
+  "name": "dandy-crawl",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "homepage": "https://github.com/dandy-seo/serp-keyword-statistics",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dandy-seo/serp-keyword-statistics"
+  },
+  "bugs": {
+    "url": "https://github.com/dandy-seo/serp-keyword-statistics/issues"
+  },
+  "keywords": [
+    "dandyseo",
+    "dandy"
+  ],
+  "author": "Tom Canac <contact@tomcanac.com> (http://tomcanac.com)",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "cheerio": "^0.20.0",
+    "lodash": "^4.10.0",
+    "request-promise": "^2.0.1",
+    "valid-url": "^1.0.9"
+  }
+}
