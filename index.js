@@ -3,23 +3,15 @@
  * https://github.com/dandy-seo
  * Released under the GNU GPL 3.0
  */
-
+ 
 'use strict'
 
 const cheerio = require('cheerio'),
     rp = require('request-promise'),
     validUrl = require('valid-url'),
     _ = require('lodash'),
-    crawl = {}
-
-/**
- * Explore all the linked pages from a domain
- *
- * @param    {<string>}  url   the domain you want to explore
- */
-crawl.exploreDomain = function (url) {
-    return new Promise(function (resolve, reject) {
-        const tree = {
+    crawl = {},
+    tree = {
             nodes: {
                 values: [],
                 lastNodeId: 0,
@@ -28,12 +20,12 @@ crawl.exploreDomain = function (url) {
                         id: this.lastNodeId,
                         url: currentUrl,
                         isExplored: false,
-                    })
-                    this.lastNodeId++
+                    });
+                    this.lastNodeId++;
                 },
                 get(currentUrl) {
                     return this.values.filter(function (node) {
-                        return node.url === currentUrl
+                        return node.url === currentUrl;
                     })[0]
                 },
             },
@@ -45,45 +37,46 @@ crawl.exploreDomain = function (url) {
                         id: this.lastEdgeId,
                         from,
                         to,
-                    })
-                    this.lastEdgeId++
+                    });
+                    this.lastEdgeId++;
                 },
                 get(from, to) {
                     return this.values.filter(function (edge) {
-                        return edge.from === from && edge.to === to
+                        return edge.from === from && edge.to === to;
                     })[0]
                 },
             },
-        }
+        };
 
         function linkFiltering(link) {
-            let res = false
+            let res = false;
 
-            if (validUrl.isUri(link) &&             // is a proper URL
-                link.indexOf('#') === -1 &&           // is not an anchor
-                link.indexOf('.pdf') === -1 &&          // is not a file
-                link.indexOf('.jpg') === -1 &&          // is not a file
-                link.indexOf('.png') === -1 &&          // is not a file
-                link.search(tree.nodes.values[0].url) === 0) {   // is in the same domain
-                res = true
+            if (validUrl.isUri(link) &&                         // is a proper URL
+                link.indexOf('#') === -1 &&                     // is not an anchor
+                link.indexOf('.pdf') === -1 &&                  // is not a pdf
+                link.indexOf('.jpg') === -1 &&                  // is not a jpg
+                link.indexOf('.png') === -1 &&                  // is not a png
+                link.search(tree.nodes.values[0].url) === 0) {  // is in the same domain
+                res = true;
             }
 
-            return res
+            return res;
         }
 
         function linkFilteringStrict(link) {
-            let res = false
+            let res = false;
 
-            if (validUrl.isUri(link) &&                       // is a proper URL
+            if (validUrl.isUri(link) &&                         // is a proper URL
                 link.indexOf('#') === -1 &&                     // is not an anchor
-                link.indexOf('.pdf') === -1 &&                  // is not a file
-                link.indexOf('.jpg') === -1 &&                  // is not a file
-                link.indexOf('.png') === -1 &&                  // is not a file
+                link.indexOf('.pdf') === -1 &&                  // is not a pdf
+                link.indexOf('.jpg') === -1 &&                  // is not a jpg
+                link.indexOf('.png') === -1 &&                  // is not a png
                 link.search(tree.nodes.values[0].url) === 0 &&  // is in the same domain
                 tree.nodes.get(link) === undefined) {           // not in already saved
-                res = true
+                res = true;
             }
-            return res
+
+            return res;
         }
 
         function linksOfThePage(url) {
@@ -92,89 +85,84 @@ crawl.exploreDomain = function (url) {
                 uri: url,
                 resolveWithFullResponse: true,
                 simple: false,
-            }
+            };
 
             return rp(options)
                 .then(function (res) {
-                    tree.nodes.get(url).statusCode = res.statusCode
+                    tree.nodes.get(url).statusCode = res.statusCode;
 
-                    let $ = cheerio.load(res.body)
+                    let $ = cheerio.load(res.body);
                     return _.map($('a'), function (a) {
-                        return a.attribs.href
+                        return a.attribs.href;
                     })
                 })
                 .catch(function (e) {
-                    throw new Error(e)
+                    throw new Error(e);
                 })
         }
 
         function recursive(pageParente) {
             if (tree.nodes.get(pageParente).isExplored === true) {
-                return Promise.resolve()
+                return Promise.resolve();
             }
 
             // Set it as crawled
-            tree.nodes.get(pageParente).isExplored = true
+            tree.nodes.get(pageParente).isExplored = true;
 
             return linksOfThePage(pageParente)
                 .then(function unification(childrenRaw) {
-                    return _.uniq(childrenRaw)
+                    return _.uniq(childrenRaw);
                 })
                 .then(function filterLinks(uniqChildren) {
                     // First time we find a link to this page
-                    const processedUniqChildren = uniqChildren.filter(linkFiltering)
+                    const processedUniqChildren = uniqChildren.filter(linkFiltering);
+
                     processedUniqChildren.map(function (currentUrl) {
                         if (tree.edges.get(pageParente, currentUrl) === undefined) {
-                            tree.edges.push(pageParente, currentUrl)
+                            tree.edges.push(pageParente, currentUrl);
                         }
                     })
-                    return processedUniqChildren.filter(linkFilteringStrict)
+                    return processedUniqChildren.filter(linkFilteringStrict);
                 })
                 .then(function final(urls) {
                     return Promise.all(urls.map(function (currentUrl) {
-                        console.log(currentUrl)
-
-                        const nodeChild = tree.nodes.get(currentUrl)
+                        const nodeChild = tree.nodes.get(currentUrl);
 
                         if (nodeChild && nodeChild.isExplored === true) {
                             // We already know this page, but this is a new edge
-                            // if (!tree.edges.get(pageParente, child)) {
-                            tree.edges.push(pageParente, currentUrl)
-                            return Promise.resolve()
-                            // }
+                            tree.edges.push(pageParente, currentUrl);
+                            return Promise.resolve();
                         } else {
-                            tree.nodes.push(currentUrl)
-                            return recursive(currentUrl)
+                            tree.nodes.push(currentUrl);
+                            return recursive(currentUrl);
                         }
                     }))
                 })
                 .catch(function (e) {
-                    console.log(e)
+                    console.log(e);
                 })
         }
 
-        // Here we go
+/**
+ * Explore all the linked pages from a domain
+ *
+ * @param    {<string>}  url   the domain you want to explore
+ */
+crawl.exploreDomain = function (url) {
+    return new Promise(function (resolve, reject) {
         // TODO : verify the status code of the homepage
         if (!validUrl.isUri(url)) {
-            reject("Please, set a valid url")
+            reject("Please, set a valid url");
         }
+
         tree.nodes.push(url)
 
         recursive(url)
             .then(function () {
-                // Reformat so it fits the frontend lib
-                let i
-                for (i = 0; i < tree.edges.values.length; i++) {
-                    tree.edges.values[i].from = tree.nodes.get(tree.edges.values[i].from).id
-                    tree.edges.values[i].to = tree.nodes.get(tree.edges.values[i].to).id
-                }
-                for (i = 0; i < tree.nodes.values.length; i++) {
-                    tree.nodes.values[i].label = tree.nodes.values[i].url
-                }
-                resolve(tree)
+                resolve(tree);
             })
             .catch(function (e) {
-                console.log(e)
+                reject(e);
             })
     })
 }

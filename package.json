@@ -1,19 +1,22 @@
 {
   "name": "dandy-crawl",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "A website crawler. Stays in the same website and return every internal linked URL with the associated HTTP status code",
   "main": "index.js",
-  "homepage": "https://github.com/dandy-seo/serp-keyword-statistics",
+  "homepage": "https://github.com/dandy-seo/dandy-crawl",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dandy-seo/serp-keyword-statistics"
+    "url": "https://github.com/dandy-seo/dandy-crawl"
   },
   "bugs": {
-    "url": "https://github.com/dandy-seo/serp-keyword-statistics/issues"
+    "url": "https://github.com/dandy-seo/dandy-crawl/issues"
   },
   "keywords": [
     "dandyseo",
-    "dandy"
+    "dandy",
+    "seo",
+    "crawler",
+    "spider",
   ],
   "author": "Tom Canac <contact@tomcanac.com> (http://tomcanac.com)",
   "license": "GPL-3.0",
