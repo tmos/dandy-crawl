@@ -16,14 +16,14 @@
     "dandy",
     "seo",
     "crawler",
-    "spider",
+    "spider"
   ],
   "author": "Tom Canac <contact@tomcanac.com> (http://tomcanac.com)",
   "license": "GPL-3.0",
   "dependencies": {
     "cheerio": "^0.20.0",
     "lodash": "^4.10.0",
-    "request-promise": "^2.0.1",
+    "request-promise": "^4.1.1",
     "valid-url": "^1.0.9"
   }
 }
