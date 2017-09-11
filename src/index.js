@@ -4,7 +4,7 @@ import validUrl from 'valid-url';
 import _ from 'lodash';
 
 class DandyCrawl {
-  constructor() {
+  constructor(url) {
     this.tree = {
       nodes: {
         values: [],
@@ -37,19 +37,26 @@ class DandyCrawl {
         },
       },
     };
+
+    // TODO : verify the status code of the homepage
+    if (!validUrl.isUri(url)) {
+      throw new Error('Please, set a valid url');
+    }
+
+    this.seedUrl = url;
+    this.tree.nodes.push(url);
   }
 
   linkFiltering(link) {
-    const { tree } = this;
     let res = false;
+    const url = link;
 
-    if (
-      validUrl.isUri(link) && // is a proper URL
-      link.indexOf('#') === -1 && // is not an anchor
-      link.indexOf('.pdf') === -1 && // is not a pdf
-      link.indexOf('.jpg') === -1 && // is not a jpg
-      link.indexOf('.png') === -1 && // is not a png
-      link.search(tree.nodes.values[0].url) === 0 // is in the same domain
+    if (validUrl.isUri(link) && // is a proper URL
+      url.indexOf('#') === -1 && // is not an anchor
+      url.indexOf('.pdf') === -1 && // is not a pdf
+      url.indexOf('.jpg') === -1 && // is not a jpg
+      url.indexOf('.png') === -1 && // is not a png
+      url.search(this.seedUrl) === 0 // is in the same domain
     ) {
       res = true;
     }
@@ -60,15 +67,11 @@ class DandyCrawl {
   linkFilteringStrict(link) {
     const { tree } = this;
     let res = false;
+    const url = link;
 
     if (
-      validUrl.isUri(link) && // is a proper URL
-      link.indexOf('#') === -1 && // is not an anchor
-      link.indexOf('.pdf') === -1 && // is not a pdf
-      link.indexOf('.jpg') === -1 && // is not a jpg
-      link.indexOf('.png') === -1 && // is not a png
-      link.search(tree.nodes.values[0].url) === 0 && // is in the same domain
-      tree.nodes.get(link) === undefined // not in already saved
+      this.linkFiltering(url) &&
+      tree.nodes.get(url) === undefined // not in already saved
     ) {
       res = true;
     }
@@ -108,10 +111,10 @@ class DandyCrawl {
     tree.nodes.get(pageParente).isExplored = true;
 
     return this.linksOfThePage(pageParente)
-      .then(childrenRaw => _.uniq(childrenRaw))
-      .then((uniqChildren) => {
+      .then(rawlinksOfTheParentPage => _.uniq(rawlinksOfTheParentPage))
+      .then((linksOfThePage) => {
         // First time we find a link to this page
-        const processedUniqChildren = uniqChildren.filter(self.linkFiltering, self);
+        const processedUniqChildren = linksOfThePage.filter(self.linkFiltering, self);
 
         processedUniqChildren.map((currentUrl) => {
           if (tree.edges.get(pageParente, currentUrl) === undefined) {
@@ -137,17 +140,10 @@ class DandyCrawl {
       });
   }
 
-  exploreDomain(url) {
+  exploreDomain() {
     const self = this;
     return new Promise((resolve, reject) => {
-      // TODO : verify the status code of the homepage
-      if (!validUrl.isUri(url)) {
-        reject(new Error('Please, set a valid url'));
-      }
-
-      this.tree.nodes.push(url);
-
-      this.recursive(url)
+      this.recursive(this.seedUrl)
         .then(() => {
           resolve(self.tree);
         })
