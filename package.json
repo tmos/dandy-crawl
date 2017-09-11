@@ -1,6 +1,6 @@
 {
   "name": "dandy-crawl",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A website crawler. Stays in the same website and return every internal linked URL with the associated HTTP status code",
   "main": "dist/index.js",
   "homepage": "https://github.com/tmos/dandy-crawl",
@@ -12,9 +12,6 @@
     "url": "https://github.com/tmos/dandy-crawl/issues"
   },
   "keywords": [
-    "dandyseo",
-    "dandy",
-    "seo",
     "crawler",
     "spider"
   ],
