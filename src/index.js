@@ -47,36 +47,30 @@ class DandyCrawl {
     this.tree.nodes.push(url);
   }
 
-  linkFiltering(link) {
-    let res = false;
-    const url = link;
+  formatUrls(link) {
+    let url = link;
 
-    if (validUrl.isUri(link) && // is a proper URL
-      url.indexOf('#') === -1 && // is not an anchor
-      url.indexOf('.pdf') === -1 && // is not a pdf
-      url.indexOf('.jpg') === -1 && // is not a jpg
-      url.indexOf('.png') === -1 && // is not a png
-      url.search(this.seedUrl) === 0 // is in the same domain
-    ) {
-      res = true;
+    if (!validUrl.is_uri(url)) {
+      url = `${this.seedUrl}/${link}`;
     }
 
-    return res;
+    return url;
+  }
+
+  linkFiltering(link) {
+    return (
+      validUrl.isUri(link) && // is a proper URL
+      link.indexOf('#') === -1 && // is not an anchor
+      link.indexOf('.pdf') === -1 && // is not a pdf
+      link.indexOf('.jpg') === -1 && // is not a jpg
+      link.indexOf('.png') === -1 && // is not a png
+      link.search(this.seedUrl) === 0
+    ); // is in the same domain
   }
 
   linkFilteringStrict(link) {
-    const { tree } = this;
-    let res = false;
-    const url = link;
-
-    if (
-      this.linkFiltering(url) &&
-      tree.nodes.get(url) === undefined // not in already saved
-    ) {
-      res = true;
-    }
-
-    return res;
+    // We don't want a link that is already saved
+    return this.linkFiltering(link) && this.tree.nodes.get(link) === undefined;
   }
 
   linksOfThePage(url) {
@@ -112,29 +106,29 @@ class DandyCrawl {
 
     return this.linksOfThePage(pageParente)
       .then(rawlinksOfTheParentPage => _.uniq(rawlinksOfTheParentPage))
-      .then((linksOfThePage) => {
+      .then(linksOfThePage => linksOfThePage.map(link => this.formatUrls(link)))
+      .then(validLinks => validLinks.filter(self.linkFiltering, self))
+      .then(internalLinks => internalLinks.map((currentUrl) => {
         // First time we find a link to this page
-        const processedUniqChildren = linksOfThePage.filter(self.linkFiltering, self);
-
-        processedUniqChildren.map((currentUrl) => {
-          if (tree.edges.get(pageParente, currentUrl) === undefined) {
-            tree.edges.push(pageParente, currentUrl);
-          }
-          return true;
-        });
-        return processedUniqChildren.filter(self.linkFilteringStrict, self);
-      })
-      .then(urls => Promise.all(urls.map((currentUrl) => {
-        const nodeChild = tree.nodes.get(currentUrl);
-
-        if (nodeChild && nodeChild.isExplored === true) {
-          // We already know this page, but this is a new edge
+        if (tree.edges.get(pageParente, currentUrl) === undefined) {
           tree.edges.push(pageParente, currentUrl);
-          return Promise.resolve();
         }
-        tree.nodes.push(currentUrl);
-        return this.recursive(currentUrl);
-      })))
+        return currentUrl;
+      }))
+      // Next line : too much magic 🦄⭐️⭐️ what it do? mystery
+      .then(internalLinks => internalLinks.filter(self.linkFilteringStrict, self))
+      .then(urls =>
+        Promise.all(urls.map((currentUrl) => {
+          const nodeChild = tree.nodes.get(currentUrl);
+
+          if (nodeChild && nodeChild.isExplored === true) {
+            // We already know this page, but this is a new edge
+            tree.edges.push(pageParente, currentUrl);
+            return Promise.resolve();
+          }
+          tree.nodes.push(currentUrl);
+          return this.recursive(currentUrl);
+        })))
       .catch((e) => {
         console.log(e);
       });

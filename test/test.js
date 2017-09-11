@@ -10,5 +10,5 @@ test('foo', async (t) => {
 
   console.log(nodes);
 
-  t.is(nodes.length, 2);
+  t.is(nodes.length, 3);
 });
