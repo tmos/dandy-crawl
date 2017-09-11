@@ -2,14 +2,14 @@
   "name": "dandy-crawl",
   "version": "0.1.0",
   "description": "A website crawler. Stays in the same website and return every internal linked URL with the associated HTTP status code",
-  "main": "index.js",
-  "homepage": "https://github.com/dandy-seo/dandy-crawl",
+  "main": "dist/index.js",
+  "homepage": "https://github.com/tmos/dandy-crawl",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dandy-seo/dandy-crawl"
+    "url": "https://github.com/tmos/dandy-crawl"
   },
   "bugs": {
-    "url": "https://github.com/dandy-seo/dandy-crawl/issues"
+    "url": "https://github.com/tmos/dandy-crawl/issues"
   },
   "keywords": [
     "dandyseo",
@@ -18,12 +18,38 @@
     "crawler",
     "spider"
   ],
-  "author": "Tom Canac <contact@tomcanac.com> (http://tomcanac.com)",
+  "author": "Tom Canac <tom.canac@gmail.com>",
   "license": "GPL-3.0",
+  "scripts": {
+    "precommit": "lint-staged",
+    "test": "ava"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ]
+  },
   "dependencies": {
-    "cheerio": "^0.20.0",
+    "cheerio": "^1.0.0-rc.2",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^7.0.0",
+    "gulp-eslint": "^4.0.0",
+    "gulp-plumber": "^1.1.0",
     "lodash": "^4.10.0",
-    "request-promise": "^4.1.1",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.1",
     "valid-url": "^1.0.9"
+  },
+  "devDependencies": {
+    "ava": "^0.22.0",
+    "babel-core": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "eslint": "^4.6.1",
+    "eslint-config-airbnb-base": "^12.0.0",
+    "eslint-plugin-import": "^2.7.0",
+    "http-server": "^0.10.0",
+    "husky": "^0.14.3",
+    "lint-staged": "^4.1.3"
   }
 }
