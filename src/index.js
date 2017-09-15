@@ -1,5 +1,5 @@
 import cheerio from 'cheerio';
-import rp from 'request-promise';
+import got from 'got';
 import validUrl from 'valid-url';
 import _ from 'lodash';
 
@@ -74,14 +74,7 @@ class DandyCrawl {
   }
 
   linksOfThePage(url) {
-    const options = {
-      method: 'GET',
-      uri: url,
-      resolveWithFullResponse: true,
-      simple: false,
-    };
-
-    return rp(options)
+    return got(url)
       .then((res) => {
         this.tree.nodes.get(url).statusCode = res.statusCode;
 
