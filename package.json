@@ -31,10 +31,8 @@
   "dependencies": {
     "babel-eslint": "^8.0.1",
     "babel-preset-env": "^1.6.0",
-    "babel-preset-flow": "^6.23.0",
     "cheerio": "^1.0.0-rc.2",
     "eslint-plugin-flowtype": "^2.38.0",
-    "flow-bin": "^0.56.0",
     "got": "^7.1.0",
     "gulp": "^3.9.1",
     "gulp-babel": "^7.0.0",
