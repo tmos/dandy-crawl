@@ -2,6 +2,7 @@ import cheerio from 'cheerio';
 import got from 'got';
 import validUrl from 'valid-url';
 import _ from 'lodash';
+import Sitemapper from 'sitemapper';
 
 class DandyCrawl {
   constructor(url) {
@@ -10,11 +11,12 @@ class DandyCrawl {
         values: [],
         lastNodeId: 0,
         push(currentUrl) {
-          this.values.push({
+          const newNode = {
             id: this.lastNodeId,
             url: currentUrl,
             isExplored: false,
-          });
+          };
+          this.values.push(newNode);
           this.lastNodeId += 1;
         },
         get(currentUrl) {
@@ -25,11 +27,12 @@ class DandyCrawl {
         values: [],
         lastEdgeId: 0,
         push(from, to) {
-          this.values.push({
+          const newEdge = {
             id: this.lastEdgeId,
             from,
             to,
-          });
+          };
+          this.values.push(newEdge);
           this.lastEdgeId += 1;
         },
         get(from, to) {
@@ -97,34 +100,64 @@ class DandyCrawl {
     // Set it as crawled
     tree.nodes.get(pageParente).isExplored = true;
 
-    return this.linksOfThePage(pageParente)
-      .then(rawlinksOfTheParentPage => _.uniq(rawlinksOfTheParentPage))
-      .then(linksOfThePage => linksOfThePage.map(link => this.formatUrls(link)))
-      .then(validLinks => validLinks.filter(self.linkFiltering, self))
-      .then(internalLinks => internalLinks.map((currentUrl) => {
-        // First time we find a link to this page
-        if (tree.edges.get(pageParente, currentUrl) === undefined) {
-          tree.edges.push(pageParente, currentUrl);
-        }
-        return currentUrl;
-      }))
-      // Next line : too much magic 🦄⭐️⭐️ what it do? mystery
-      .then(internalLinks => internalLinks.filter(self.linkFilteringStrict, self))
-      .then(urls =>
-        Promise.all(urls.map((currentUrl) => {
-          const nodeChild = tree.nodes.get(currentUrl);
+    return (
+      this.linksOfThePage(pageParente)
+        .then(rawlinksOfTheParentPage => _.uniq(rawlinksOfTheParentPage))
+        .then(linksOfThePage =>
+          linksOfThePage.map(link => this.formatUrls(link)))
+        .then(validLinks => validLinks.filter(self.linkFiltering, self))
+        .then(internalLinks =>
+          internalLinks.map((currentUrl) => {
+            // First time we find a link to this page
+            if (tree.edges.get(pageParente, currentUrl) === undefined) {
+              tree.edges.push(pageParente, currentUrl);
+            }
+            return currentUrl;
+          }))
+        // Next line : too much magic 🦄⭐️⭐️ what it do? mystery
+        .then(internalLinks =>
+          internalLinks.filter(self.linkFilteringStrict, self))
+        .then(urls =>
+          Promise.all(urls.map((currentUrl) => {
+            const nodeChild = tree.nodes.get(currentUrl);
 
-          if (nodeChild && nodeChild.isExplored === true) {
-            // We already know this page, but this is a new edge
-            tree.edges.push(pageParente, currentUrl);
-            return Promise.resolve();
-          }
-          tree.nodes.push(currentUrl);
-          return this.recursive(currentUrl);
-        })))
-      .catch((e) => {
-        console.log(e);
-      });
+            if (nodeChild && nodeChild.isExplored === true) {
+              // We already know this page, but this is a new edge
+              tree.edges.push(pageParente, currentUrl);
+              return Promise.resolve();
+            }
+            tree.nodes.push(currentUrl);
+            return this.recursive(currentUrl);
+          })))
+        .catch((e) => {
+          console.log(e);
+        })
+    );
+  }
+
+  getSitemapUrls() {
+    const self = this;
+
+    return new Promise((resolve, reject) => {
+      const sitemap = new Sitemapper();
+
+      sitemap.timeout = 5000;
+      return sitemap
+        .fetch(`${self.seedUrl}sitemap.xml`)
+        .then((data) => {
+          data.sites.map((url) => {
+            if (!this.tree.nodes.get(url)) {
+              this.tree.nodes.push(url);
+            }
+            return true;
+          }, self);
+          return self.tree;
+        })
+        .then(tree => resolve(tree))
+        .catch((error) => {
+          reject(new Error(error));
+        });
+    });
   }
 
   exploreDomain() {
