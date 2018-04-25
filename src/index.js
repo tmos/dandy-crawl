@@ -39,6 +39,10 @@ class DandyCrawl {
           return this.values.filter(edge => edge.from === from && edge.to === to)[0];
         },
       },
+      concat(newData) {
+          this.nodes.values.concat(newData.nodes.values);
+          this.nodes.values.concat(newData.nodes.values);
+      }
     };
 
     // TODO : verify the status code of the homepage
@@ -171,6 +175,20 @@ class DandyCrawl {
           reject(e);
         });
     });
+  }
+
+  async crawl() {
+    const self = this;
+
+    const sitemapUrl = await self.getSitemapUrls();
+    const exploredData = await self.exploreDomain();
+
+    console.log(sitemapUrl);
+    console.log(exploredData);
+
+    const combinedData = ;
+
+    return combinedData;
   }
 }
 
