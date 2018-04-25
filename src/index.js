@@ -23,26 +23,11 @@ class DandyCrawl {
           return this.values.filter(node => node.url === currentUrl)[0];
         },
       },
-      edges: {
-        values: [],
-        lastEdgeId: 0,
-        push(from, to) {
-          const newEdge = {
-            id: this.lastEdgeId,
-            from,
-            to,
-          };
-          this.values.push(newEdge);
-          this.lastEdgeId += 1;
-        },
-        get(from, to) {
-          return this.values.filter(edge => edge.from === from && edge.to === to)[0];
-        },
-      },
       concat(newData) {
-          this.nodes.values.concat(newData.nodes.values);
-          this.nodes.values.concat(newData.nodes.values);
-      }
+        const newConcatValues = _.uniq(this.nodes.values.concat(newData.nodes.values));
+        this.nodes.values = newConcatValues;
+        return this;
+      },
     };
 
     // TODO : verify the status code of the homepage
@@ -110,14 +95,14 @@ class DandyCrawl {
         .then(linksOfThePage =>
           linksOfThePage.map(link => this.formatUrls(link)))
         .then(validLinks => validLinks.filter(self.linkFiltering, self))
-        .then(internalLinks =>
-          internalLinks.map((currentUrl) => {
-            // First time we find a link to this page
-            if (tree.edges.get(pageParente, currentUrl) === undefined) {
-              tree.edges.push(pageParente, currentUrl);
-            }
-            return currentUrl;
-          }))
+        // .then(internalLinks =>
+        //   internalLinks.map((currentUrl) => {
+        //     // First time we find a link to this page
+        //     if (tree.edges.get(pageParente, currentUrl) === undefined) {
+        //       tree.edges.push(pageParente, currentUrl);
+        //     }
+        //     return currentUrl;
+        //   }))
         // Next line : too much magic 🦄⭐️⭐️ what it do? mystery
         .then(internalLinks =>
           internalLinks.filter(self.linkFilteringStrict, self))
@@ -126,8 +111,8 @@ class DandyCrawl {
             const nodeChild = tree.nodes.get(currentUrl);
 
             if (nodeChild && nodeChild.isExplored === true) {
-              // We already know this page, but this is a new edge
-              tree.edges.push(pageParente, currentUrl);
+              // // We already know this page, but this is a new edge
+              // tree.edges.push(pageParente, currentUrl);
               return Promise.resolve();
             }
             tree.nodes.push(currentUrl);
@@ -182,13 +167,9 @@ class DandyCrawl {
 
     const sitemapUrl = await self.getSitemapUrls();
     const exploredData = await self.exploreDomain();
+    const concatenated = sitemapUrl.concat(exploredData);
 
-    console.log(sitemapUrl);
-    console.log(exploredData);
-
-    const combinedData = ;
-
-    return combinedData;
+    return concatenated;
   }
 }
 
