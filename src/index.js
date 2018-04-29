@@ -95,14 +95,6 @@ class DandyCrawl {
         .then(linksOfThePage =>
           linksOfThePage.map(link => this.formatUrls(link)))
         .then(validLinks => validLinks.filter(self.linkFiltering, self))
-        // .then(internalLinks =>
-        //   internalLinks.map((currentUrl) => {
-        //     // First time we find a link to this page
-        //     if (tree.edges.get(pageParente, currentUrl) === undefined) {
-        //       tree.edges.push(pageParente, currentUrl);
-        //     }
-        //     return currentUrl;
-        //   }))
         // Next line : too much magic 🦄⭐️⭐️ what it do? mystery
         .then(internalLinks =>
           internalLinks.filter(self.linkFilteringStrict, self))
@@ -111,8 +103,6 @@ class DandyCrawl {
             const nodeChild = tree.nodes.get(currentUrl);
 
             if (nodeChild && nodeChild.isExplored === true) {
-              // // We already know this page, but this is a new edge
-              // tree.edges.push(pageParente, currentUrl);
               return Promise.resolve();
             }
             tree.nodes.push(currentUrl);
@@ -124,15 +114,16 @@ class DandyCrawl {
     );
   }
 
-  getSitemapUrls() {
+  getSitemapUrls(stmp) {
     const self = this;
+    const sitemapUrl = stmp || `${self.seedUrl}sitemap.xml`;
 
     return new Promise((resolve, reject) => {
       const sitemap = new Sitemapper();
 
       sitemap.timeout = 5000;
       return sitemap
-        .fetch(`${self.seedUrl}sitemap.xml`)
+        .fetch(sitemapUrl)
         .then((data) => {
           data.sites.map((url) => {
             if (!this.tree.nodes.get(url)) {
