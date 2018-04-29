@@ -27,3 +27,11 @@ test('Can crawl AND get sitemap', async (t) => {
 
   t.is(nodes.length, 5);
 });
+
+test('Can get URLs just from the sitemap', async (t) => {
+  const dandee = new DandyCrawl('http://127.0.0.1:8080/');
+  const data = await dandee.getSitemapUrls('http://127.0.0.1:8080/sitemap.xml');
+  const nodes = data.nodes.values;
+
+  t.is(nodes.length, 4);
+});
